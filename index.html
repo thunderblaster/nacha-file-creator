@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+	<!-- meta -->
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+	<!-- css -->
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+		integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+	<link rel="stylesheet"
+		href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css">
+	<link rel="stylesheet" href="css/styles.css">
+
+	<title>NACHA File Creator</title>
+</head>
+
+<body>
+	<div id="app">
+		<!-- app -->
+		<nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+			<a class="navbar-brand" href="#">NACHA File Creator</a>
+			<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault"
+				aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
+				<span class="navbar-toggler-icon"></span>
+			</button>
+
+			<div class="collapse navbar-collapse" id="navbarsExampleDefault">
+				<ul class="navbar-nav mr-auto">
+					<li class="nav-item">
+						<a class="nav-link disabled" href="#">New File</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Glossary</a>
+					</li>
+					<li class="nav-item active">
+						<a class="nav-link" href="#" @click="createNACHAFile()">Export File</a>
+					</li>
+					<li class="nav-item">
+						<span class="navbar-text totals credits">Credits: ${{totalCredits}}</span>
+					</li>
+					<li class="nav-item">
+						<span class="navbar-text totals debits">Debits: ${{totalDebits}}</span>
+					</li>
+
+				</ul>
+				<div class="btn-group" role="group" aria-label="Mode Select">
+					<button type="button" class="btn btn-primary">Simple</button>
+					<button type="button" class="btn btn-secondary" disabled>Advanced</button>
+				</div>
+			</div>
+		</nav>
+
+		<div class="container-fluid">
+			<div class="row">
+				<nav class="col-md-2 d-none d-md-block bg-light sidebar">
+					<div class="sidebar-sticky">
+						<ul class="nav flex-column">
+							<!--
+							<li class="nav-item">
+								<a class="nav-link btn-primary" href="#">
+									File
+								</a>
+							</li>
+							-->
+							<li class="nav-item">
+								<a class="nav-link" href="#">
+									Batches ▼
+								</a>
+								<ul class="batch-list">
+									<li v-for="(batch, index) in file.batches" class="mouse-pointer"
+										:class="{'selected-batch': index==currentBatch}">
+										Batch {{index + 1}}
+									</li>
+								</ul>
+								<a class="nav-link" href="#" v-if="!simple">
+									Add Batch 🞧
+								</a>
+							</li>
+							<li class="nav-item">
+								<a class="nav-link" href="#" @click="addEntryToCurrentBatch">
+									Add Entry 🞧
+								</a>
+							</li>
+						</ul>
+						<!--
+						<h6
+							class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+							<span>Saved reports</span>
+							<a class="d-flex align-items-center text-muted" href="#">
+								<span data-feather="plus-circle"></span>
+							</a>
+						</h6>
+						<ul class="nav flex-column mb-2">
+							<li class="nav-item">
+								<a class="nav-link" href="#">
+									<span data-feather="file-text"></span>
+									Current month
+								</a>
+							</li>
+							<li class="nav-item">
+								<a class="nav-link" href="#">
+									<span data-feather="file-text"></span>
+									Last quarter
+								</a>
+							</li>
+							<li class="nav-item">
+								<a class="nav-link" href="#">
+									<span data-feather="file-text"></span>
+									Social engagement
+								</a>
+							</li>
+							<li class="nav-item">
+								<a class="nav-link" href="#">
+									<span data-feather="file-text"></span>
+									Year-end sale
+								</a>
+							</li>
+						</ul> -->
+					</div>
+				</nav>
+
+				<main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4">
+					<form id="simple-form">
+						<div class="row">
+							<div class="col-md-3">
+								<div class="form-group has-feedback">
+									<label for="bank_name">Originating Bank Name:</label>
+									<input type="text" class="form-control form-control-sm" id="bank_name"
+										maxlength="23" required v-model="file.bankname">
+								</div>
+							</div>
+							<div class="col-md-3">
+								<div class="form-group has-feedback">
+									<label for="bank_routing">Originating Bank ABA/Rounting #:</label> (<a
+										href="https://www.frbservices.org/EPaymentsDirectory/search.html"
+										target="_blank">Lookup</a>)
+									<input type="number" class="form-control form-control-sm" id="bank_routing" required
+										min="0" max="999999999" v-model="file.aba">
+								</div>
+							</div>
+						</div>
+						<div v-for="batch in file.batches">
+							<div class="row">
+								<div class="col-md-2">
+									<div class="form-group has-feedback">
+										<label for="sec_code">SEC Code:</label>
+										<a tabindex="0" class="mouse-pointer" role="button" data-toggle="popover"
+											data-trigger="focus" title="SEC Codes"
+											data-content="Use PPD for personal accounts (e.g. payroll) and CCD for business accounts (e.g. accounts payable)">How
+											do I choose?</a>
+										<select class="custom-select custom-select-sm" v-model="batch.sec">
+											<option value="ppd" selected>PPD</option>
+											<option value="ccd" disabled>CCD</option>
+										</select>
+									</div>
+								</div>
+								<div class="col-md-2">
+									<div class="form-group has-feedback">
+										<label for="company_name">Company Name:</label>
+										<input type="text" class="form-control form-control-sm" id="company_name"
+											maxlength="16" required v-model="batch.companyname">
+									</div>
+								</div>
+								<div class="col-md-2">
+									<div class="form-group has-feedback">
+										<label for="company_tin">Company TIN:</label>
+										<input type="number" class="form-control form-control-sm" id="company_tin"
+											required min="0" max="999999999" required v-model="batch.companytin">
+									</div>
+								</div>
+								<div class="col-md-2">
+									<div class="form-group has-feedback">
+										<label for="sec_code">Effective Date:</label>
+										<input type="text" class="form-control form-control-sm" id="effectivedate"
+											v-model="batch.effectivedate" minlength="10" maxlength="10" required>
+									</div>
+								</div>
+								<div class="col-md-2">
+									<div class="form-group has-feedback">
+										<label for="description">Description:</label>
+										<input type="text" class="form-control form-control-sm" id="description"
+											maxlength="10" required v-model="batch.description">
+									</div>
+								</div>
+							</div>
+							<div class="row" v-for="entry in batch.entries">
+								<div class="col-md-2">
+									<div class="form-group has-feedback">
+										<label for="name">Name:</label>
+										<input type="text" class="form-control form-control-sm" v-model="entry.name"
+											required>
+									</div>
+								</div>
+								<div class="col-md-2">
+									<div class="form-group has-feedback">
+										<label for="description">Routing #:</label>
+										<input type="number" class="form-control form-control-sm" max="999999999"
+											min="0" required v-model="entry.routing">
+									</div>
+								</div>
+								<div class="col-md-2">
+									<div class="form-group has-feedback">
+										<label for="description">Account #:</label>
+										<input type="number" class="form-control form-control-sm" max="999999999"
+											min="0" required v-model="entry.account">
+									</div>
+								</div>
+								<div class="col-md-2">
+									<div class="form-group has-feedback">
+										<label for="description">Account Type:</label>
+										<select class="custom-select custom-select-sm" v-model="entry.type">
+											<option value="dda" selected>Checking</option>
+											<option value="sav">Savings</option>
+										</select>
+									</div>
+								</div>
+								<div class="col-md-2">
+									<div class="form-group has-feedback">
+										<label for="description">Amount:</label>
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">$</span>
+											</div>
+											<input type="number" class="form-control form-control-sm" max="999999999"
+												min="0" step="0.01" required v-model="entry.amount">
+										</div>
+									</div>
+								</div>
+								<div class="col-md-1">
+									<div class="form-group has-feedback">
+										<label for="description">Credit/Debit:</label>
+										<select class="custom-select custom-select-sm" v-model="entry.creditdebit">
+											<option value="cr">Credit</option>
+											<option value="db">Debit</option>
+										</select>
+									</div>
+								</div>
+								<div class="col-md-1">
+									<div class="form-group has-feedback">
+										<label for="description">Delete:</label><br>
+										<button type="button" class="btn btn-danger btn-sm"
+											@click="deleteEntry(index)">X</button>
+									</div>
+								</div>
+							</div> <!-- /entry -->
+						</div> <!-- /batch -->
+					</form>
+				</main>
+			</div>
+		</div>
+	</div>
+
+	<!-- scripts -->
+	<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script> <!-- dev version -->
+	<!-- <script src="https://cdn.jsdelivr.net/npm/vue"></script> -->
+	<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+		integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+		crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+		integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+		crossorigin="anonymous"></script>
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+		integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+		crossorigin="anonymous"></script>
+	<script src="js/app.js"></script>
+	<script src="js/scripts.js"></script>
+</body>
+
+</html>
