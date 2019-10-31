@@ -152,7 +152,7 @@
 											do I choose?</a>
 										<select class="custom-select custom-select-sm" v-model="batch.sec">
 											<option value="ppd" selected>PPD</option>
-											<option value="ccd" disabled>CCD</option>
+											<option value="ccd">CCD</option>
 										</select>
 									</div>
 								</div>
@@ -167,14 +167,14 @@
 									<div class="form-group has-feedback">
 										<label for="company_tin">Company TIN:</label>
 										<input type="number" class="form-control form-control-sm" id="company_tin"
-											required min="0" max="999999999" required v-model="batch.companytin">
+											required min="0" max="999999999" required v-model="batch.companytin" placeholder="123456789">
 									</div>
 								</div>
 								<div class="col-md-2">
 									<div class="form-group has-feedback">
 										<label for="sec_code">Effective Date:</label>
 										<input type="text" class="form-control form-control-sm" id="effectivedate"
-											v-model="batch.effectivedate" minlength="10" maxlength="10" required>
+											v-model="batch.effectivedate" minlength="10" maxlength="10" required placeholder="MM/DD/YYYY">
 									</div>
 								</div>
 								<div class="col-md-2">
@@ -203,7 +203,7 @@
 								<div class="col-md-2">
 									<div class="form-group has-feedback">
 										<label for="description">Account #:</label>
-										<input type="number" class="form-control form-control-sm" max="999999999"
+										<input type="number" class="form-control form-control-sm" max="9999999999999"
 											min="0" required v-model="entry.account">
 									</div>
 								</div>
