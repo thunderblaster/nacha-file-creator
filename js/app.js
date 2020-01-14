@@ -78,7 +78,7 @@ var app = new Vue({
 				fileString += batchHeader;
 				for(let j=0; j<this.file.batches[i].entries.length; j++) {
 					let trancode1, trancode2;
-					let amount = this.file.batches[i].entries[j].amount * 100;
+					let amount = cleanedAmount(this.file.batches[i].entries[j].amount);
 					switch(this.file.batches[i].entries[j].type) {
 						case "dda":
 							trancode1 = "2";
@@ -100,7 +100,7 @@ var app = new Vue({
 							break;
 					}
 					//ppd
-					let entryString = "6" + trancode1 + trancode2 + this.file.batches[i].entries[j].routing + this.file.batches[i].entries[j].account.padEnd(17, " ") + amount.toString().padStart(10, "0") + this.file.batches[i].entries[j].individualID.padEnd(15, " ") + this.file.batches[i].entries[j].name.padEnd(22, " ") + this.file.batches[i].entries[j].discretionary.padEnd(2, " ") + "0" + this.file.aba.substr(0,8) + entryNumber.toString().padStart(7, "0") + "\r\n";
+					let entryString = "6" + trancode1 + trancode2 + this.file.batches[i].entries[j].routing + this.file.batches[i].entries[j].account.padEnd(17, " ") + String(amount).padStart(10, "0") + this.file.batches[i].entries[j].individualID.padEnd(15, " ") + this.file.batches[i].entries[j].name.padEnd(22, " ") + this.file.batches[i].entries[j].discretionary.padEnd(2, " ") + "0" + this.file.aba.substr(0,8) + entryNumber.toString().padStart(7, "0") + "\r\n";
 
 
 					entryNumber++;
@@ -144,6 +144,7 @@ var app = new Vue({
 				for(let j=0; j<this.file.batches[i].entries.length; j++) {
 					if(this.file.batches[i].entries[j].creditdebit==="cr") {
 						credits += Number(this.file.batches[i].entries[j].amount);
+						credits = Number(credits.toFixed(2));
 					}
 				}
 			}
@@ -155,6 +156,7 @@ var app = new Vue({
 				for(let j=0; j<this.file.batches[i].entries.length; j++) {
 					if(this.file.batches[i].entries[j].creditdebit==="db") {
 						debits += Number(this.file.batches[i].entries[j].amount);
+						debits = Number(debits.toFixed(2));
 					}
 				}
 			}
@@ -163,3 +165,18 @@ var app = new Vue({
 	}
 
 });
+
+function cleanedAmount(num) {
+	num = num.replace(/\$/g, ""); //remove "$"
+	num = num.replace(/,/g, ""); //remove ","
+	if (/\d*\.\d{2}$/.test(num)) { //number includes decimal point and two numbers following
+		num = num.replace(/\./g, "");
+	} else if (/\d*\.\.d$/.test(num)) { //number includes decimal point and one number following
+		num = num.replace(/\./g, "");
+		num += "0";
+	} else if (/^\d*[^\.]\d*$/.test(num)) { //no decimal point
+		num += "00";
+	}
+	num = Number(num); //now num is an integer and won't have problems.
+	return num;
+}
