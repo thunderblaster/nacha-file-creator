@@ -50,6 +50,15 @@ var app = new Vue({
 			this.file.batches[this.currentBatch].entries.splice(index, 1);
 		},
 		createNACHAFile: function () {
+			if(this.totalCredits!==this.totalDebits) {
+				alert("File not in balance.");
+				return;
+			}
+			if(this.file.batches[0].effectivedate.length!==10) {
+				alert("Date format incorrect. It must be in MM/DD/YYYY format including leading zeroes and slashes");
+				return;
+			}
+			
 			//don't forget to validate the actual input and ensure it's not TOO long (or just incorrect)
 			var entryNumber = 0;
 			var batchEntryNumber = 0;
@@ -79,6 +88,7 @@ var app = new Vue({
 				for(let j=0; j<this.file.batches[i].entries.length; j++) {
 					let trancode1, trancode2;
 					let amount = cleanedAmount(this.file.batches[i].entries[j].amount);
+					let indname = this.file.batches[i].entries[j].name.substr(0,22);
 					switch(this.file.batches[i].entries[j].type) {
 						case "dda":
 							trancode1 = "2";
@@ -100,7 +110,7 @@ var app = new Vue({
 							break;
 					}
 					//ppd
-					let entryString = "6" + trancode1 + trancode2 + this.file.batches[i].entries[j].routing + this.file.batches[i].entries[j].account.padEnd(17, " ") + String(amount).padStart(10, "0") + this.file.batches[i].entries[j].individualID.padEnd(15, " ") + this.file.batches[i].entries[j].name.padEnd(22, " ") + this.file.batches[i].entries[j].discretionary.padEnd(2, " ") + "0" + this.file.aba.substr(0,8) + entryNumber.toString().padStart(7, "0") + "\r\n";
+					let entryString = "6" + trancode1 + trancode2 + this.file.batches[i].entries[j].routing + this.file.batches[i].entries[j].account.padEnd(17, " ") + String(amount).padStart(10, "0") + this.file.batches[i].entries[j].individualID.padEnd(15, " ") + indname.padEnd(22, " ") + this.file.batches[i].entries[j].discretionary.padEnd(2, " ") + "0" + this.file.aba.substr(0,8) + entryNumber.toString().padStart(7, "0") + "\r\n";
 
 
 					entryNumber++;
